@@ -78,23 +78,21 @@ const getParams = (description, name, zip = 'index.zip', handler = 'index.handle
 
 /*
 @param 
-	{from} string: the dir or js file to zip 
-        defaults to all (i.e. *);
-	{into} string: destination name
+	{folder} string: the dir or js file to zip;
 */
-const zip = (from="*", into = 'index.zip') => {
-    process.chdir('src');
-	return new Promise((resolve, reject) => {
-	let execFile = require('child_process').execFile;
-	execFile('zip',['-r', into, from], {maxBuffer: 1024*1024}, (err, stdout) => {
-    if(err) {
-        reject(err);    
-    }
-	resolve(stdout);
-    console.log('Function Uploaded Successfully............................................................'.green);
-		});
-	})
-}
+const betterZip = (folder='src') => {
+  var archive = archiver('zip');
+  return new Promise((resolve, reject) => {
+  var output = fs.createWriteStream('index.zip', { mode: 0o7777 })
+  output.on('close', function () {
+    console.log('Files Have Been zipped'.green);
+    resolve();
+  })
+
+  // good practice to catch this error explicitly
+  archive.on('error', function (err) {
+    reject(err);
+  });
 
 const unlink = (filePath) => {
     fs.unlink(filePath, (err) => {

@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "aws-sdk": "^2.58.0",
-    "babel-preset-latest": "^6.24.1",
+    "cli-table": "^0.3.1",
     "colors": "^1.1.2",
     "fs": "^0.0.1-security",
     "inquirer": "^3.0.6"
@@ -14,7 +14,6 @@
     "babel-preset-env": "^1.5.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "awsTool": "npm index.js"
   },
   "bin": {
