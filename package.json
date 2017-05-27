@@ -1,0 +1,24 @@
+{
+  "name": "aws_tool",
+  "version": "1.0.0",
+  "description": "A Tool To Help You Deploy Lambda Functions",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.58.0",
+    "babel-preset-latest": "^6.24.1",
+    "colors": "^1.1.2",
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.5.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "awsTool": "npm index.js"
+  },
+  "bin": {
+    "awsTool": "index.js"
+  },
+  "author": "M. B. Weatherford",
+  "license": "MIT"
+}
