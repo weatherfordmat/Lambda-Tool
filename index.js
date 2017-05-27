@@ -3,6 +3,7 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const colors = require('colors');
+const inquirer = require('inquirer');
 
 // general config
 AWS.config.update({ region: 'us-east-1' })
@@ -77,10 +78,11 @@ const getParams = (description, name, zip = 'index.zip', handler = 'index.handle
 
 /*
 @param 
-	{from} string: the dir or js file to zip
+	{from} string: the dir or js file to zip 
+        defaults to all (i.e. *);
 	{into} string: destination name
 */
-const zip = (from, into = 'index.zip') => {
+const zip = (from="*", into = 'index.zip') => {
     process.chdir('src');
 	return new Promise((resolve, reject) => {
 	let execFile = require('child_process').execFile;
@@ -131,5 +133,19 @@ const createNewFunction = async (where, descr, name) => {
 }
 
 // our main method;
-block(createNewFunction('./index.js', 'This is our first deployment from the aws-sdk', 'Test_Function'));
+// block(createNewFunction('./index.js', 'This is our first deployment from the aws-sdk', 'Test_Function'));
 
+inquirer.prompt([
+    {
+        type: 'input',
+        name: 'functionName',
+        message: 'Function Name: ',
+    },
+    {
+        type: 'input',
+        name: 'functionDescription',
+        message: 'Description: '
+    }
+]).then(function (answers) {
+    console.log(answers);
+});
