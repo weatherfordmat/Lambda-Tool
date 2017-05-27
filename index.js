@@ -92,11 +92,9 @@ const unlink = (filePath) => {
 
 /*
 @param 
-	{from} string: the dir or js file to zip 
-        defaults to all (i.e. *)
-	{into} string: destination name
+	{folder} string: the dir or js file to zip;
 */
-const betterZip = (folder='src', callback) => {
+const betterZip = (folder='src') => {
   var archive = archiver('zip');
   return new Promise((resolve, reject) => {
   var output = fs.createWriteStream('index.zip', { mode: 0o7777 })
