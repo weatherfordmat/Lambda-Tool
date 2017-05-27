@@ -1,9 +1,10 @@
 #! /usr/bin/env node
 
-const AWS = require('aws-sdk');
-const fs = require('fs');
-const colors = require('colors');
-const inquirer = require('inquirer');
+const AWS = require('aws-sdk')
+const fs = require('fs')
+const colors = require('colors')
+const inquirer = require('inquirer')
+const archiver = require('archiver')
 
 // general config
 AWS.config.update({ region: 'us-east-1' })
@@ -20,35 +21,34 @@ const lambda = new AWS.Lambda({apiVersion: '2015-03-31'})
 const handler = (service, method, config = {}) => {
   return new Promise((resolve, reject) => {
     service[method](config, (err, result) => {
-      if (err) reject(err);
+      if (err) reject(err)
       else {
-        resolve(result);
+        resolve(result)
       }
     })
   })
     .then(data => {
-        console.log(data);
-        writeToLog(JSON.stringify(data));
+        console.log(data)
+        writeToLog(JSON.stringify(data))
     })
     .catch(err => {
-        console.log(err);
-        writeToLog(JSON.stringify(err.message));
+        console.log(err)
+        writeToLog(JSON.stringify(err.message))
     })
 }
 
 /*
 @param 
 	{str} string
-    keeps a log of our past deployments;
+    keeps a log of our past deployments
 */
 const writeToLog = (str) => {
-    str = `\n${new Date().toISOString()}: ${str}\n`;
+    str = `\n${new Date().toISOString()}: ${str}\n`
     fs.appendFile('deploy.log', str, function (err) {
-    if (err) throw err;
-    console.log('Details can be found in the deploy.log file'.yellow);
-    });
+    if (err) throw err
+    console.log('Details can be found in the deploy.log file'.yellow)
+    })
 }
-
 
 /*
 @param 
@@ -76,65 +76,77 @@ const getParams = (description, name, zip = 'index.zip', handler = 'index.handle
   return params
 }
 
+const unlink = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(filePath, (err) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve();
+          console.log('Deleted Zip File'.red);
+        }
+    });
+      });
+}
+
 /*
 @param 
 	{from} string: the dir or js file to zip 
-        defaults to all (i.e. *);
+        defaults to all (i.e. *)
 	{into} string: destination name
 */
-const zip = (from="*", into = 'index.zip') => {
-    process.chdir('src');
-	return new Promise((resolve, reject) => {
-	let execFile = require('child_process').execFile;
-	execFile('zip',['-r', into, from], {maxBuffer: 1024*1024}, (err, stdout) => {
-    if(err) {
-        reject(err);    
-    }
-	resolve(stdout);
-    console.log('Function Uploaded Successfully............................................................'.green);
-		});
-	})
-}
+const betterZip = (folder='src', callback) => {
+  var archive = archiver('zip');
+  return new Promise((resolve, reject) => {
+  var output = fs.createWriteStream('index.zip', { mode: 0o7777 })
+  output.on('close', function () {
+    console.log('Files Have Been zipped'.green);
+    resolve();
+  })
 
-const unlink = (filePath) => {
-    fs.unlink(filePath, (err) => {
-        if (err) throw err;
-        console.log('Deleted Zip File'.underline.yellow)
-    });
-}
+  // good practice to catch this error explicitly
+  archive.on('error', function (err) {
+    reject(err);
+  });
 
+  // pipe archive data to the file
+  archive.pipe(output)
+  archive.directory(folder, false)
+  archive.finalize();
+  });
+}
 
 /*
 @param
     {func} function
-	wraps the functions in a try, catch block;
+	wraps the functions in a try, catch block
 */
 const block = (func) => {
     try {
-        func;
+        func
     } catch(e) {
-        console.error(e);
-        writeToLog(e);
+        console.error(e)
+        writeToLog(e)
     }
 }
 
 /*
 @param
-    {where} string
+  {where} string
 	{description} string
 	{name} string
 */
-const createNewFunction = async (where, descr, name) => {
-	await zip(where);
-	await handler(lambda, "createFunction", getParams(descr, name));
-    await unlink('index.zip');
+const createNewFunction = async (name, descr) => {
+	await betterZip('src');
+  await handler(lambda, "createFunction", getParams(descr, name));
 	// list all functions.
+  await unlink('index.zip');
 	await handler(lambda, "listFunctions");
 }
 
-// our main method;
-// block(createNewFunction('./index.js', 'This is our first deployment from the aws-sdk', 'Test_Function'));
 
+// our main method
 inquirer.prompt([
     {
         type: 'input',
@@ -147,5 +159,9 @@ inquirer.prompt([
         message: 'Description: '
     }
 ]).then(function (answers) {
-    console.log(answers);
-});
+    block(createNewFunction(answers.functionName, answers.functionDescription));
+})
+.catch(err => {
+    console.log(err)
+})
+

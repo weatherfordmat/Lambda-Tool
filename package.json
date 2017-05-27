@@ -4,6 +4,7 @@
   "description": "A Tool To Help You Deploy Lambda Functions",
   "main": "index.js",
   "dependencies": {
+    "archiver": "^1.3.0",
     "aws-sdk": "^2.58.0",
     "babel-preset-latest": "^6.24.1",
     "colors": "^1.1.2",
